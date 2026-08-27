@@ -25,6 +25,7 @@ import {
   MAX_ACTIVE_BALLS,
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
+  PADDLE_LASER_COOLDOWN_MS,
 } from '../constants';
 import { PowerupCapsule } from '../entities/PowerupCapsule';
 import { Paddle } from '../entities/Paddle';
@@ -249,7 +250,7 @@ export class PowerupManager {
         break;
 
       case 'LASER':
-        context.paddle.setLasers(true, duration);
+        context.paddle.setLasers(true, PADDLE_LASER_COOLDOWN_MS);
         break;
 
       case 'STICKY':

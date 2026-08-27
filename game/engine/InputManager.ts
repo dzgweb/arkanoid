@@ -149,6 +149,26 @@ export class InputManager implements GameEngineInputHandler {
   }
 
   /**
+   * Sets directional left button state (for touch D-Pad / virtual controls).
+   */
+  public setLeft(active: boolean): void {
+    this.state.left = active;
+    if (active) {
+      this.state.pointerActive = false;
+    }
+  }
+
+  /**
+   * Sets directional right button state (for touch D-Pad / virtual controls).
+   */
+  public setRight(active: boolean): void {
+    this.state.right = active;
+    if (active) {
+      this.state.pointerActive = false;
+    }
+  }
+
+  /**
    * Primary action triggered by mouse click or touch tap.
    */
   public handlePrimaryAction(): void {
