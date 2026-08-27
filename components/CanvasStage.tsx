@@ -76,12 +76,13 @@ export const CanvasStage: React.FC<CanvasStageProps> = ({
       ctx.imageSmoothingEnabled = false; // Crisp pixel/retro rendering
     }
 
-    if (engineRef.current) {
-      engineRef.current.mountCanvas(canvas, ctx);
+    const currentEngine = engineRef.current;
+    if (currentEngine) {
+      currentEngine.mountCanvas(canvas, ctx);
     }
 
     return () => {
-      engineRef.current?.unmountCanvas();
+      currentEngine?.unmountCanvas();
     };
   }, [width, height, engineRef]);
 

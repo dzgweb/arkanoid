@@ -20,7 +20,7 @@ export const StartScreenModal: React.FC<StartScreenModalProps> = ({
         ARKANOID
       </h1>
       <p className="mt-2 text-xs sm:text-sm tracking-[0.3em] text-cyan-300 font-semibold uppercase">
-        // Cyber Brick Breaker //
+        {`// CYBER BRICK BREAKER //`}
       </p>
 
       {/* High Score Preview */}
