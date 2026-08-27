@@ -139,6 +139,16 @@ export class GameStateStore {
    * Directly update a portion of the state and notify subscribers
    */
   public setState = (partial: Partial<GameHUDState>): void => {
+    let changed = false;
+    for (const key of Object.keys(partial) as Array<keyof GameHUDState>) {
+      if (this.state[key] !== partial[key]) {
+        changed = true;
+        break;
+      }
+    }
+    if (!changed) {
+      return;
+    }
     this.state = { ...this.state, ...partial };
     this.notify();
   };

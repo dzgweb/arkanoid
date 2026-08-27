@@ -98,6 +98,10 @@ export interface Ball {
   color: string;
   glowColor: string;
   trail?: Array<{ x: number; y: number; alpha: number }>;
+  prevX: number;
+  prevY: number;
+  setVelocity(vx: number, vy: number): void;
+  setSpeed(speed: number): void;
 }
 
 export interface Paddle {
@@ -115,6 +119,11 @@ export interface Paddle {
   color: string;
   glowColor: string;
   targetX?: number;
+  targetWidth: number;
+  setLasers(enabled: boolean, cooldownMs?: number): void;
+  canFireLaser(currentTimeMs?: number): boolean;
+  fireLaser(currentTimeMs?: number): LaserProjectile[];
+  catchBall(ball: Ball): void;
 }
 
 export type BrickType =
@@ -316,11 +325,12 @@ export interface IScreenShake {
 }
 
 export interface ILevelLayout {
-  levelNumber: number;
+  levelNumber?: number;
   name: string;
-  themeColor: string;
+  themeColor?: string;
   matrix: Array<Array<number | null>>;
   specialDrops?: Record<string, PowerupType>;
+  author?: string;
 }
 
 export interface ITestAPI {

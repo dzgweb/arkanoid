@@ -8,9 +8,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { GameContainer } from '@/components/GameContainer';
 import { TouchControls } from '@/components/Controls/TouchControls';
+import { defaultGameStateStore } from '@/hooks/useGameStateBridge';
+import { INITIAL_HUD_STATE } from '@/game/constants';
 
 describe('GameContainer Mobile Touch Controls Integration', () => {
   beforeEach(() => {
+    defaultGameStateStore.setState(INITIAL_HUD_STATE);
     // Mock requestAnimationFrame
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
       return setTimeout(() => cb(performance.now()), 16) as unknown as number;

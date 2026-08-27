@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { CanvasStage } from './CanvasStage';
 import { ScoreBoard } from './HUD/ScoreBoard';
 import { LivesDisplay } from './HUD/LivesDisplay';
@@ -48,20 +48,24 @@ export const GameContainer: React.FC = () => {
     setVolume,
   } = useGameStateBridge();
 
-  const { isMuted, volume, toggleMute, changeVolume } = useAudio({
-    onMuteChange: setMuted,
-    onVolumeChange: setVolume,
-  });
+  const audioOptions = useMemo(
+    () => ({
+      onMuteChange: setMuted,
+      onVolumeChange: setVolume,
+    }),
+    [setMuted, setVolume]
+  );
+
+  const { isMuted, volume, toggleMute, changeVolume } = useAudio(audioOptions);
 
   // Detect Touch screen capability
   useEffect(() => {
     const checkTouch = () => {
       if (typeof window !== 'undefined') {
         const hasTouch =
-          'ontouchstart' in window ||
-          navigator.maxTouchPoints > 0 ||
-          window.matchMedia('(pointer: coarse)').matches;
-        setIsTouchDevice(hasTouch);
+          (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) ||
+          (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)')?.matches);
+        setIsTouchDevice(Boolean(hasTouch));
       }
     };
     checkTouch();
