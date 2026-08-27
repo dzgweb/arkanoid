@@ -42,6 +42,11 @@ import { LaserProjectile } from '../entities/LaserProjectile';
 import { BrickGridManager } from '../systems/BrickGridManager';
 import { LevelManager } from '../systems/LevelManager';
 import { PowerupManager, PowerupContext } from '../systems/PowerupManager';
+import { ParticleSystem } from '../systems/ParticleSystem';
+import { ScreenShake } from '../systems/ScreenShake';
+import { BackgroundRenderer } from '../systems/BackgroundRenderer';
+import { FloatingTextSystem } from '../systems/FloatingTextSystem';
+import { getSoundManager } from '../audio/SoundManager';
 import { GameStateStore } from '@/hooks/useGameStateBridge';
 
 export interface GameEngineOptions {
@@ -49,6 +54,8 @@ export interface GameEngineOptions {
   soundManager?: ISoundManager;
   particleSystem?: IParticleSystem;
   screenShake?: IScreenShake;
+  backgroundRenderer?: BackgroundRenderer;
+  floatingTextSystem?: FloatingTextSystem;
 }
 
 export class GameEngine implements IGameEngine {
@@ -61,6 +68,8 @@ export class GameEngine implements IGameEngine {
   private soundManager: ISoundManager | null = null;
   private particleSystem: IParticleSystem | null = null;
   private screenShake: IScreenShake | null = null;
+  private backgroundRenderer: BackgroundRenderer;
+  private floatingTextSystem: FloatingTextSystem;
 
   // Entities & Systems
   private paddle: Paddle;
@@ -86,9 +95,16 @@ export class GameEngine implements IGameEngine {
 
   constructor(options: GameEngineOptions = {}) {
     this.stateStore = options.stateStore || null;
-    this.soundManager = options.soundManager || null;
-    this.particleSystem = options.particleSystem || null;
-    this.screenShake = options.screenShake || null;
+    this.soundManager =
+      options.soundManager !== undefined
+        ? options.soundManager
+        : typeof window !== 'undefined'
+        ? getSoundManager()
+        : null;
+    this.particleSystem = options.particleSystem !== undefined ? options.particleSystem : new ParticleSystem();
+    this.screenShake = options.screenShake !== undefined ? options.screenShake : new ScreenShake();
+    this.backgroundRenderer = options.backgroundRenderer ?? new BackgroundRenderer(75);
+    this.floatingTextSystem = options.floatingTextSystem ?? new FloatingTextSystem(30);
 
     this.inputManager = new InputManager();
     this.paddle = new Paddle();
@@ -112,6 +128,8 @@ export class GameEngine implements IGameEngine {
       onExplosionDetonated: (x, y, radiusPx, _chainDepth) => {
         this.soundManager?.playExplosion();
         this.particleSystem?.emitExplosion(x, y, radiusPx);
+        this.backgroundRenderer.triggerPulse(0.7);
+        this.screenShake?.addTrauma(TRAUMA_EXPLOSION);
       },
       onScreenShake: (trauma) => {
         this.screenShake?.addTrauma(trauma);
@@ -349,6 +367,10 @@ export class GameEngine implements IGameEngine {
   }
 
   private update(fixedDt: number): void {
+    // Background and floating texts update regardless
+    this.backgroundRenderer.update(fixedDt);
+    this.floatingTextSystem.update(fixedDt);
+
     if (this.status !== 'PLAYING') return;
 
     const inputState = this.inputManager.getState();
@@ -444,6 +466,15 @@ export class GameEngine implements IGameEngine {
       this.soundManager?.playExplosion();
       this.screenShake?.addTrauma(TRAUMA_EXPLOSION);
       this.particleSystem?.emitExplosion(brick.x + brick.width / 2, brick.y + brick.height / 2);
+      this.backgroundRenderer.triggerPulse(0.7);
+      this.floatingTextSystem.spawnSpecialText(
+        brick.x + brick.width / 2,
+        brick.y,
+        'TNT BLAST!',
+        '#f43f5e',
+        'rgba(244, 63, 94, 0.9)',
+        14
+      );
     } else if (destroyed) {
       this.soundManager?.playBrickShatter();
       this.screenShake?.addTrauma(TRAUMA_BRICK_HIT);
@@ -463,6 +494,13 @@ export class GameEngine implements IGameEngine {
     if (this.score > this.highScore) {
       this.highScore = this.score;
     }
+
+    this.floatingTextSystem.spawnScorePopup(
+      brick.x + brick.width / 2,
+      brick.y + brick.height / 2,
+      pointsAwarded,
+      this.multiplier
+    );
 
     this.emitEvent({
       type: 'BRICK_HIT',
@@ -532,6 +570,9 @@ export class GameEngine implements IGameEngine {
     this.hasShield = false;
     this.powerupManager.clearAll();
     this.lasers = [];
+    this.particleSystem?.reset();
+    this.floatingTextSystem.reset();
+    this.screenShake?.reset();
 
     this.levelManager.resetToFirstLevel();
     this.loadCurrentLevel();
@@ -545,6 +586,8 @@ export class GameEngine implements IGameEngine {
     this.powerupManager.clearAll();
     this.lasers = [];
     this.hasShield = false;
+    this.particleSystem?.reset();
+    this.floatingTextSystem.reset();
   }
 
   private resetBallToPaddle(): void {
@@ -594,17 +637,13 @@ export class GameEngine implements IGameEngine {
 
     ctx.save();
 
-    // Screen Shake Transform
+    // 1. Screen Shake Matrix Transform
     this.screenShake?.applyTransform(ctx);
 
-    // 1. Clear Canvas
-    ctx.fillStyle = '#020617'; // slate-950
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    // 2. Cosmic Synthwave Parallax Starfield & Horizon Grid Background
+    this.backgroundRenderer.render(ctx);
 
-    // 2. Render Neon Grid Background
-    this.renderBackgroundGrid(ctx);
-
-    // 3. Render Shield Floor
+    // 3. Shield Floor
     if (this.hasShield) {
       ctx.save();
       ctx.shadowBlur = 12;
@@ -614,21 +653,21 @@ export class GameEngine implements IGameEngine {
       ctx.restore();
     }
 
-    // 4. Render Brick Grid
+    // 4. Brick Grid
     this.brickGrid.render(ctx, typeof performance !== 'undefined' ? performance.now() : Date.now());
 
-    // 5. Render Falling Power-up Capsules
+    // 5. Falling Power-up Capsules
     this.powerupManager.render(ctx, alpha);
 
-    // 6. Render Laser Projectiles
+    // 6. Laser Projectiles
     for (const laser of this.lasers) {
       laser.render(ctx, alpha);
     }
 
-    // 7. Render Paddle
+    // 7. Paddle
     this.paddle.render(ctx, alpha);
 
-    // 8. Render Sticky Docking Aim Guides
+    // 8. Sticky Docking Aim Guides
     if (this.paddle.isSticky || this.balls.some((b) => b.isStuckToPaddle)) {
       for (const ball of this.balls) {
         if (ball.isStuckToPaddle) {
@@ -656,37 +695,21 @@ export class GameEngine implements IGameEngine {
       }
     }
 
-    // 9. Render Balls
+    // 9. Balls
     for (const ball of this.balls) {
       ball.render(ctx, alpha);
     }
 
-    // 10. Render Particles
+    // 10. Particles
     this.particleSystem?.render(ctx);
 
-    // Restore Screen Shake
+    // 11. Floating Text Popups
+    this.floatingTextSystem.render(ctx, alpha);
+
+    // 12. Restore Screen Shake
     this.screenShake?.restoreTransform(ctx);
 
     ctx.restore();
-  }
-
-  private renderBackgroundGrid(ctx: CanvasRenderingContext2D): void {
-    ctx.strokeStyle = 'rgba(6, 182, 212, 0.04)';
-    ctx.lineWidth = 1;
-
-    for (let x = 0; x <= CANVAS_WIDTH; x += 40) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, CANVAS_HEIGHT);
-      ctx.stroke();
-    }
-
-    for (let y = 0; y <= CANVAS_HEIGHT; y += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(CANVAS_WIDTH, y);
-      ctx.stroke();
-    }
   }
 
   // ==========================================

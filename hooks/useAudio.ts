@@ -1,18 +1,19 @@
 /**
  * @file hooks/useAudio.ts
  * Declarative React hook for controlling sound volume, mute state,
- * and triggering UI-layer sound effects.
+ * and triggering UI-layer sound effects with LocalStorage persistence.
  */
 
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { SoundType } from '@/game/types';
+import { SoundType, PowerupType } from '@/game/types';
 import { STORAGE_KEY_SETTINGS } from '@/game/constants';
 import { storageGet, storageSet } from '@/utils/storage';
+import { getSoundManager } from '@/game/audio/SoundManager';
 
 interface SoundManagerRef {
-  playSound(type: SoundType, params?: { combo?: number; offsetRatio?: number }): void;
+  playSound(type: SoundType, params?: { combo?: number; offsetRatio?: number; type?: PowerupType }): void;
   setMuted(muted: boolean): void;
   setVolume(volume: number): void;
 }
@@ -43,6 +44,15 @@ export function useAudio(options?: UseAudioOptions) {
     });
     return settings.sfxVolume ?? 0.8;
   });
+
+  // Automatically register and initialize SoundManager singleton on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const manager = getSoundManager();
+      registerSoundManager(manager);
+      manager.init().catch(() => {});
+    }
+  }, []);
 
   // Sync with global sound manager and callbacks whenever state changes
   useEffect(() => {
@@ -94,7 +104,7 @@ export function useAudio(options?: UseAudioOptions) {
   );
 
   const playSound = useCallback(
-    (type: SoundType, params?: { combo?: number; offsetRatio?: number }) => {
+    (type: SoundType, params?: { combo?: number; offsetRatio?: number; type?: PowerupType }) => {
       if (!isMuted && globalSoundManager) {
         globalSoundManager.playSound(type, params);
       }
