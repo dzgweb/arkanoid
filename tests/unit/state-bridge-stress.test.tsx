@@ -634,7 +634,7 @@ describe('Adversarial Stress Suite: GameStateStore & useGameStateBridge', () => 
       const initialSnap = store.getSnapshot();
 
       expect(() => {
-        store.emitEvent({ type: 'UNKNOWN_EVENT' as any });
+        store.emitEvent({ type: 'UNKNOWN_EVENT' } as unknown as Parameters<typeof store.emitEvent>[0]);
       }).not.toThrow();
 
       expect(store.getSnapshot()).toBe(initialSnap);

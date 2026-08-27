@@ -48,8 +48,8 @@
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
 | M1 | Next.js Project Foundation & React UI Shell | Next.js App Router, Tailwind CSS, TypeScript setup, Canvas container, HUD, Modal overlays, decoupled State Bridge, LocalStorage high scores | none | DONE |
-| M2 | 2D Physics Engine, Paddle & Multi-Tier Bricks | Fixed-timestep Canvas loop, circle-AABB continuous collision with substepping, paddle reflection math, 4 brick types, 6 level layouts | M1 | PLANNED |
-| M3 | Collectible Power-ups & Dynamic Mechanics | Power-up capsule drops, 7 power-up types (Multi-Ball, Laser, Extend, Shrink, Slow, Sticky, Shield), laser projectile physics, timers & HUD badges | M2 | PLANNED |
+| M2 | 2D Physics Engine, Paddle & Multi-Tier Bricks | Fixed-timestep Canvas loop, circle-AABB continuous collision with substepping, paddle reflection math, 4 brick types, 6 level layouts | M1 | DONE |
+| M3 | Collectible Power-ups & Dynamic Mechanics | Power-up capsule drops, 7 power-up types (Multi-Ball, Laser, Extend, Shrink, Slow, Sticky, Shield), laser projectile physics, timers & HUD badges | M2 | DONE |
 | M4 | Audio Synth, Particles, Screen Shake & FX Polish | Web Audio API procedural synth (12 SFX), 350-particle emitter system, quadratic screen shake, neon visual effects, level transitions & score multiplier | M3 | PLANNED |
 | M5 | E2E Testing, Mobile Controls & Production Verification | Comprehensive Vitest unit tests, test API bridge, responsive touch controls, clean `npm run build` verification | M4 | PLANNED |
 
