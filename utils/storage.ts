@@ -30,24 +30,29 @@ export function storageGet<T>(key: string, defaultValue: T): T {
     return defaultValue;
   }
 
+  // Attempt reading from window.localStorage first (even if write quota is exceeded)
   try {
-    if (isLocalStorageAvailable()) {
+    if (window.localStorage) {
       const raw = window.localStorage.getItem(key);
-      if (raw === null) {
-        return defaultValue;
+      if (raw !== null) {
+        return JSON.parse(raw) as T;
       }
-      return JSON.parse(raw) as T;
-    } else {
-      const fallbackRaw = inMemoryFallback.get(key);
-      if (fallbackRaw === undefined) {
-        return defaultValue;
-      }
+    }
+  } catch (error) {
+    console.warn(`[storageGet] Failed to read or parse key "${key}" from localStorage:`, error);
+  }
+
+  // Fall back to in-memory fallback cache
+  try {
+    const fallbackRaw = inMemoryFallback.get(key);
+    if (fallbackRaw !== undefined) {
       return JSON.parse(fallbackRaw) as T;
     }
   } catch (error) {
-    console.warn(`[storageGet] Failed to read or parse key "${key}":`, error);
-    return defaultValue;
+    console.warn(`[storageGet] Failed to parse key "${key}" from in-memory fallback:`, error);
   }
+
+  return defaultValue;
 }
 
 /**

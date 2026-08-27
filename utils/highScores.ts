@@ -16,21 +16,25 @@ import { storageGet, storageSet, storageRemove } from './storage';
  */
 export function getHighScores(): HighScoreEntry[] {
   const scores = storageGet<HighScoreEntry[]>(STORAGE_KEY_HIGHSCORES, []);
-  if (!scores || !Array.isArray(scores) || scores.length === 0) {
-    const seed = [...DEFAULT_HIGH_SCORES];
-    storageSet(STORAGE_KEY_HIGHSCORES, seed);
-    return seed;
+  const validScores = Array.isArray(scores)
+    ? scores.filter(
+        (e): e is HighScoreEntry => !!e && typeof e.score === 'number' && Number.isFinite(e.score)
+      )
+    : [];
+
+  if (validScores.length === 0) {
+    return resetHighScores();
   }
 
   // Ensure returned array is sorted descending by score
-  return [...scores].sort((a, b) => b.score - a.score).slice(0, MAX_HIGH_SCORES);
+  return [...validScores].sort((a, b) => b.score - a.score).slice(0, MAX_HIGH_SCORES);
 }
 
 /**
  * Check whether a given score qualifies for the top high scores list.
  */
 export function isHighScore(score: number): boolean {
-  if (score <= 0) return false;
+  if (!Number.isFinite(score) || score <= 0) return false;
   const currentScores = getHighScores();
   if (currentScores.length < MAX_HIGH_SCORES) return true;
   return score > currentScores[currentScores.length - 1].score;
@@ -52,7 +56,7 @@ export function saveHighScore(
   scoreParam?: number,
   levelParam?: number
 ): HighScoreEntry[] {
-  let rawName: string;
+  let rawName: unknown;
   let rawScore: number;
   let rawLevel: number;
 
@@ -60,19 +64,26 @@ export function saveHighScore(
     rawName = entryOrName;
     rawScore = scoreParam ?? 0;
     rawLevel = levelParam ?? 1;
-  } else {
+  } else if (entryOrName && typeof entryOrName === 'object') {
     rawName = entryOrName.name;
-    rawScore = entryOrName.score;
-    rawLevel = entryOrName.level;
+    rawScore = entryOrName.score ?? scoreParam ?? 0;
+    rawLevel = entryOrName.level ?? levelParam ?? 1;
+  } else {
+    rawName = '';
+    rawScore = scoreParam ?? 0;
+    rawLevel = levelParam ?? 1;
   }
 
-  const currentScores = storageGet<HighScoreEntry[]>(STORAGE_KEY_HIGHSCORES, []);
-  const cleanName = (rawName.trim().toUpperCase() || 'AAA').slice(0, 3);
+  const currentScores = getHighScores();
+  const safeName = typeof rawName === 'string' ? rawName : '';
+  const trimmedName = safeName.trim().toUpperCase() || 'AAA';
+  const cleanName = Array.from(trimmedName).slice(0, 3).join('');
+
   const newEntry: HighScoreEntry = {
     id: `hs-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     name: cleanName,
-    score: Math.max(0, Math.floor(rawScore)),
-    level: Math.max(1, Math.floor(rawLevel)),
+    score: Math.max(0, Math.floor(typeof rawScore === 'number' && Number.isFinite(rawScore) ? rawScore : 0)),
+    level: Math.max(1, Math.floor(typeof rawLevel === 'number' && Number.isFinite(rawLevel) ? rawLevel : 1)),
     date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
   };
 

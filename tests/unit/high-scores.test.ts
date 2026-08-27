@@ -39,12 +39,12 @@ describe('High Scores Utility (utils/highScores.ts)', () => {
 
   it('limits stored high scores to maximum 10 entries', () => {
     for (let i = 1; i <= 15; i++) {
-      saveHighScore(`P${i}`, i * 10000, 1);
+      saveHighScore(`P${i}`, 100000 + i * 10000, 1);
     }
     const scores = getHighScores();
     expect(scores.length).toBe(10);
-    expect(scores[0].score).toBe(150000);
-    expect(scores[9].score).toBe(60000);
+    expect(scores[0].score).toBe(250000);
+    expect(scores[9].score).toBe(160000);
   });
 
   it('truncates initials to 3 uppercase letters', () => {
