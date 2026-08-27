@@ -9,6 +9,8 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import type { GameEngine } from '@/game/types';
+import { GameEngine as GameEngineImpl } from '@/game/engine/GameEngine';
+import { defaultGameStateStore } from '@/hooks/useGameStateBridge';
 
 interface CanvasStageProps {
   engineRef: React.MutableRefObject<GameEngine | null>;
@@ -115,8 +117,12 @@ export const CanvasStage: React.FC<CanvasStageProps> = ({
   // Attach Canvas element to GameEngine on mount with HiDPI support
   useEffect(() => {
     const canvas = canvasRef.current;
-    const currentEngine = engineRef.current;
     if (!canvas) return;
+
+    if (!engineRef.current && typeof window !== 'undefined') {
+      engineRef.current = new GameEngineImpl({ stateStore: defaultGameStateStore });
+    }
+    const currentEngine = engineRef.current;
 
     const setupCanvas = () => {
       const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;

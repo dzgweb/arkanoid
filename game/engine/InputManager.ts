@@ -62,6 +62,9 @@ export class InputManager implements GameEngineInputHandler {
           break;
 
         case 'Space':
+        case 'ArrowUp':
+        case 'KeyW':
+        case 'Enter':
           this.state.launch = true;
           this.state.fireLaser = true;
           this.notifyAction('LAUNCH');

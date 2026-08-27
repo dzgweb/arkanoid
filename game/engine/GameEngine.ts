@@ -695,6 +695,20 @@ export class GameEngine implements IGameEngine {
       }
     }
 
+    // 8b. Pulsing launch prompt when ball is waiting on paddle during gameplay
+    if (this.status === 'PLAYING' && this.balls.some((b) => b.isStuckToPaddle)) {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const alphaVal = 0.5 + 0.4 * Math.sin(now / 200);
+      ctx.save();
+      ctx.font = 'bold 13px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = `rgba(34, 211, 238, ${alphaVal})`;
+      ctx.shadowColor = 'rgba(6, 182, 212, 0.8)';
+      ctx.shadowBlur = 8;
+      ctx.fillText('CLICK / PRESS SPACE TO LAUNCH', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 65);
+      ctx.restore();
+    }
+
     // 9. Balls
     for (const ball of this.balls) {
       ball.render(ctx, alpha);

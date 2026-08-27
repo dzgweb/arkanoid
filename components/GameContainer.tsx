@@ -184,7 +184,10 @@ export const GameContainer: React.FC = () => {
           {/* Modal Overlays Layer */}
           {hudState.status === 'IDLE' && (
             <StartScreenModal
-              onStart={startGame}
+              onStart={() => {
+                startGame();
+                launchBall();
+              }}
               onOpenHighScores={() => setShowHighScores(true)}
               highScore={hudState.highScore}
             />
