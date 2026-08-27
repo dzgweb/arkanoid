@@ -52,7 +52,7 @@ export const AudioControls: React.FC<AudioControlsProps> = ({
       </button>
 
       <label htmlFor="volume-slider" className="sr-only">
-        Master Volume
+        Volume Slider
       </label>
       <input
         id="volume-slider"
@@ -62,7 +62,7 @@ export const AudioControls: React.FC<AudioControlsProps> = ({
         step={0.05}
         value={effectiveVolume}
         onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-        aria-label="Master Volume"
+        aria-label="Volume Slider"
         aria-valuemin={0}
         aria-valuemax={1}
         aria-valuenow={effectiveVolume}
