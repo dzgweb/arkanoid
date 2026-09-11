@@ -34,7 +34,7 @@
     "jsdom": "^30.0.1",
     "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.7.3",
+    "typescript": "^7.0.2",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^5.0.0",
     "vitest-canvas-mock": "^1.2.0"
